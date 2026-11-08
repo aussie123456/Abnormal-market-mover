@@ -1,0 +1,413 @@
+<style>
+  .am { font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; display: grid; gap: var(--cds-gap-lg); }
+  .am h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+  .am h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .am p { margin: 0; }
+  .am-head { display: grid; gap: var(--cds-gap-sm); }
+  .am-title-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .am-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .am-controls select { font: inherit; color: var(--color-fg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 0.25rem 0.5rem; }
+  .am-controls label { display: inline-flex; align-items: center; gap: 0.3rem; cursor: pointer; }
+  .am-takeaway { font-size: var(--cds-font-size-body); max-width: 70ch; }
+  .am-takeaway b { font-weight: 600; }
+  .am-markets { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10.5rem), 1fr)); gap: var(--cds-gap-sm); }
+  .am-mkt { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); display: grid; gap: 0.15rem; font-size: var(--cds-font-size-caption); min-height: 4.6rem; }
+  .am-mkt-name { font-weight: 600; font-size: var(--cds-font-size-body); display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; }
+  .am-state { display: inline-flex; align-items: center; gap: 0.3rem; font-size: var(--cds-font-size-caption); font-weight: 400; color: var(--color-fg-muted); }
+  .am-state::before { content: ""; width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--cds-chart-muted); }
+  .am-state.is-open::before { background: var(--color-ok); }
+  .am-mkt-row { display: flex; justify-content: space-between; gap: 0.5rem; color: var(--color-fg-muted); }
+  .am-mkt-row span:last-child { color: var(--color-fg); }
+  .am-section { display: grid; gap: var(--cds-gap-sm); }
+  .am-section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .am-rule { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); max-width: 80ch; }
+  .am-count { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .am-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: var(--cds-gap-md); }
+  .am-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); min-width: 0; }
+  .am-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--cds-gap-sm); }
+  .am-sym { font-weight: 700; font-size: var(--cds-font-size-heading); }
+  .am-name { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); overflow-wrap: anywhere; }
+  .am-chip { display: inline-block; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); border: 1px solid var(--color-border-line); border-radius: 999px; padding: 0 0.5rem; white-space: nowrap; }
+  .am-big { font-family: var(--font-anthropic-serif); font-size: calc(var(--cds-font-size-title) * 1.35); line-height: 1.1; }
+  .am-big-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--cds-gap-sm); }
+  .am-z { font-size: var(--cds-font-size-body); font-weight: 600; border-radius: var(--cds-radius); padding: 0.1rem 0.5rem; border: 1px solid var(--color-border-line); white-space: nowrap; }
+  .am-up { color: var(--color-ok); }
+  .am-down { color: var(--color-bad); }
+  .am-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem 0.8rem; font-size: var(--cds-font-size-caption); }
+  .am-stats div { display: flex; justify-content: space-between; gap: 0.5rem; }
+  .am-stats span:first-child { color: var(--color-fg-muted); }
+  .am-spark { width: 100%; height: 2.6rem; display: block; }
+  .am-cat { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .am-note { font-size: var(--cds-font-size-caption); line-height: 1.4; }
+  .am-tablebox { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: auto; max-height: 34rem; min-height: 3.5rem; }
+  .am table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); }
+  .am th, .am td { text-align: right; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; vertical-align: top; }
+  .am th:first-child, .am td:first-child { text-align: left; }
+  .am th { position: sticky; top: 0; background: var(--color-panel); color: var(--color-fg-muted); font-weight: 500; cursor: pointer; user-select: none; z-index: 1; }
+  .am th[aria-sort="descending"]::after { content: " ▾"; }
+  .am th[aria-sort="ascending"]::after { content: " ▴"; }
+  .am tbody tr { cursor: pointer; }
+  .am tbody tr:hover td { background: color-mix(in srgb, var(--color-fg) 4%, transparent); }
+  .am tbody tr.is-selected td { background: color-mix(in srgb, var(--color-fg) 7%, transparent); }
+  .am td.am-namecell { white-space: normal; min-width: 11rem; }
+  .am td.am-namecell small { display: block; color: var(--color-fg-muted); }
+  .am td.am-notecell { white-space: normal; min-width: 16rem; max-width: 28rem; text-align: left; line-height: 1.35; }
+  .am th.am-notecell { text-align: left; }
+  .am .am-empty { padding: var(--cds-pad-md); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); text-align: center; }
+  .am-failed { display: flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 3.5rem; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .am-failed::before { content: ""; width: 0.375rem; height: 0.375rem; border-radius: 50%; background: var(--color-bad); }
+  .am-detail { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); font-size: var(--cds-font-size-caption); }
+  .am-detail-head { display: flex; justify-content: space-between; gap: var(--cds-gap-sm); flex-wrap: wrap; align-items: baseline; }
+  .am-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); gap: 0.3rem 1rem; }
+  .am-detail-grid div { display: flex; justify-content: space-between; gap: 0.5rem; border-bottom: 1px solid var(--color-border-line); padding-bottom: 0.2rem; }
+  .am-detail-grid span:first-child { color: var(--color-fg-muted); }
+  .am-detail ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.25rem; }
+  .am-detail a { color: inherit; }
+  .am-detail button { font: inherit; background: none; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); color: var(--color-fg-muted); padding: 0.1rem 0.5rem; cursor: pointer; }
+  .am-method { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); max-width: 80ch; display: grid; gap: 0.4rem; }
+  .am-method b { color: var(--color-fg); font-weight: 600; }
+  [data-dash-source-state=empty] { color: transparent; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+  @media (max-width: 700px) { .am .am-hide-narrow { display: none; } }
+</style>
+
+<div class="am">
+  <header class="am-head" id="top">
+    <div class="am-title-row">
+      <h1>Abnormal Movers</h1>
+      <div class="am-controls">
+        <select id="am-market" aria-label="Market">
+          <option value="all">All markets</option>
+          <option value="S&amp;P 500">S&amp;P 500</option>
+          <option value="NASDAQ">NASDAQ</option>
+          <option value="ASX">ASX</option>
+          <option value="Nikkei 225">Nikkei 225</option>
+          <option value="KOSPI">KOSPI</option>
+        </select>
+        <label><input type="checkbox" id="am-show-excluded"> Show pre-revenue names</label>
+      </div>
+    </div>
+    <p class="am-takeaway" id="am-takeaway">
+      <span data-source="counts" data-field="as_of" class="dash-skeleton">—</span> ·
+      <b data-source="counts" data-field="screened">—</b> names screened ·
+      <b data-source="counts" data-field="tier1">—</b> large caps moving abnormally ·
+      <b data-source="counts" data-field="tier2">—</b> moved 30%+ on the week ·
+      <b data-source="counts" data-field="tier3">—</b> moved 10%+ today ·
+      <span data-source="counts" data-field="excluded">—</span> pre-revenue names set aside.
+    </p>
+    <div class="am-markets" id="am-markets" data-source="markets"></div>
+  </header>
+
+  <section class="am-section" id="tier1">
+    <div class="am-section-head">
+      <h2>Tier 1 · Large caps moving abnormally</h2>
+      <span class="am-count" id="am-tier1-count"></span>
+    </div>
+    <p class="am-rule">Market cap of US$10bn or more and today's move at least 3 standard deviations from the name's own 200-session daily-return distribution. These are the ones where the market's model was wrong.</p>
+    <div class="am-cards" id="am-cards" data-source="movers sparks"></div>
+  </section>
+
+  <section class="am-section" id="tier2">
+    <div class="am-section-head">
+      <h2>Tier 2 · Moved 30% or more over five sessions</h2>
+      <span class="am-count" id="am-tier2-count"></span>
+    </div>
+    <p class="am-rule">Any size in the universe. Revenue-generating operators only. Click a row for headlines and the balance sheet.</p>
+    <div class="am-tablebox" id="am-box-tier2"></div>
+    <div id="am-detail-tier2"></div>
+  </section>
+
+  <section class="am-section" id="tier3">
+    <div class="am-section-head">
+      <h2>Tier 3 · Moved 10% or more today</h2>
+      <span class="am-count" id="am-tier3-count"></span>
+    </div>
+    <p class="am-rule">Today's move versus the prior close, live while a market is open. Names already in tier 1 or tier 2 are listed again here so each list is complete on its own.</p>
+    <div class="am-tablebox" id="am-box-tier3"></div>
+    <div id="am-detail-tier3"></div>
+  </section>
+
+  <section class="am-section" id="peers">
+    <div class="am-section-head">
+      <h2>Peer strip · Crypto miners and AI infrastructure</h2>
+      <span class="am-count" id="am-peers-count"></span>
+    </div>
+    <p class="am-rule">IREN and its comparables, shown every run whatever they did. They are structurally volatile, so they never compete with the main screen.</p>
+    <div class="am-tablebox" id="am-box-peers"></div>
+    <div id="am-detail-peers"></div>
+  </section>
+
+  <section class="am-section" id="excluded" hidden>
+    <div class="am-section-head">
+      <h2>Set aside · Pre-revenue names that tripped a screen</h2>
+      <span class="am-count" id="am-excluded-count"></span>
+    </div>
+    <p class="am-rule">Trailing revenue below US$50m. Explorers, clinical-stage biotech and pre-commercial names, where a big move is a punt repricing rather than a model breaking.</p>
+    <div class="am-tablebox" id="am-box-excluded"></div>
+    <div id="am-detail-excluded"></div>
+  </section>
+
+  <section class="am-section" id="method">
+    <h2>How the screen works</h2>
+    <div class="am-method">
+      <p><b>Universe.</b> S&amp;P 500 members, every NASDAQ-listed company with a market cap of US$1bn or more, the top of the ASX by market cap (about the ASX 300), Nikkei 225 members and the largest KOSPI names (about the KOSPI 200). Roughly 2,000 companies.</p>
+      <p><b>Stage filter.</b> A name needs trailing twelve-month revenue of at least US$50m to appear in the tiers. Below that it is set aside and counted, not hidden.</p>
+      <p><b>Abnormality.</b> z is today's log return minus the name's mean daily log return over the prior 200 sessions, divided by the standard deviation of those returns. Price versus the 200-day moving average is shown for context only.</p>
+      <p><b>Balance sheet.</b> Net debt is total debt less cash. Net debt to EBITDA uses trailing EBITDA; "net cash" means cash exceeds debt. Debt to EV is total debt as a share of enterprise value. Facility-level detail (undrawn lines, converts, maturities) needs filings and is not on this page.</p>
+      <p><b>Refresh.</b> Hourly on weekdays by a cloud routine. Prices and fundamentals are from Yahoo Finance; headlines are from Google News. Market caps and balance sheets are converted to US dollars at the run's spot rates. Notes are written by the routine from the headlines and are a prompt to look further, not a conclusion.</p>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  const $ = (s, el) => (el || document).querySelector(s);
+  const enc = (v) => String(v).replace(/%/g, '%25').replace(/&/g, '%26').replace(/=/g, '%3D');
+  const num = (v) => (v === null || v === undefined || v === '' ? null : (isNaN(Number(v)) ? null : Number(v)));
+  const arr = (v) => (Array.isArray(v) ? v : (typeof v === 'string' && v.trim().startsWith('[') ? JSON.parse(v) : []));
+  const syd = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Sydney', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  const sydShort = new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Sydney', weekday: 'short', hour: 'numeric', minute: '2-digit' });
+  const fmt = {
+    pct: (v) => { v = num(v); return v === null ? '—' : (v > 0 ? '+' : '') + v.toFixed(1) + '%'; },
+    z: (v) => { v = num(v); return v === null ? '—' : (v > 0 ? '+' : '') + v.toFixed(1) + 'σ'; },
+    cap: (v) => { v = num(v); if (!v) return '—'; const a = Math.abs(v); const s = a >= 1e12 ? (v / 1e12).toFixed(2) + 'tn' : a >= 1e9 ? (v / 1e9).toFixed(1) + 'bn' : (v / 1e6).toFixed(0) + 'm'; return 'US$' + s; },
+    money: (v) => { v = num(v); if (v === null) return '—'; const a = Math.abs(v); const s = a >= 1e9 ? (a / 1e9).toFixed(1) + 'bn' : (a / 1e6).toFixed(0) + 'm'; return (v < 0 ? '-' : '') + 'US$' + s; },
+    x: (v) => { v = num(v); return v === null ? '—' : v.toFixed(1) + 'x'; },
+    price: (v, ccy) => { v = num(v); if (v === null) return '—'; return (ccy ? ccy + ' ' : '') + (v >= 1000 ? v.toLocaleString('en', { maximumFractionDigits: 0 }) : v.toFixed(2)); },
+    when: (iso) => { if (!iso) return '—'; const d = new Date(iso); return isNaN(d) ? '—' : syd.format(d) + ' AEDT'; },
+    whenShort: (iso) => { if (!iso) return '—'; const d = new Date(iso); return isNaN(d) ? '—' : sydShort.format(d); },
+    ndE: (r) => { const nd = num(r.net_debt_usd), e = num(r.ebitda_usd); if (nd === null) return '—'; if (nd < 0) return 'net cash'; if (!e || e <= 0) return fmt.money(nd) + ' (EBITDA ≤ 0)'; return fmt.x(nd / e); },
+    state: (s) => ({ REGULAR: 'Open', PRE: 'Pre-market', POST: 'After hours', PREPRE: 'Closed', POSTPOST: 'Closed', CLOSED: 'Closed' }[s] || (s ? s : 'Closed')),
+  };
+  const cls = (v) => { v = num(v); return v === null ? '' : v > 0 ? 'am-up' : v < 0 ? 'am-down' : ''; };
+  const norm = (r) => Object.assign({}, r, { tiers: arr(r.tiers), headlines: arr(r.headlines), peer: r.peer === true || r.peer === 'true', excluded: r.excluded && r.excluded !== 'null' ? r.excluded : null });
+
+  dash.calc('counts', {
+    inputs: ['movers', 'markets'],
+    title: 'Screen counts',
+    description: 'How many names were screened and how many fell into each tier, from the movers and markets files.',
+    fn: (movers, markets) => {
+      const tiers = (r) => Array.isArray(r.tiers) ? r.tiers : JSON.parse(r.tiers || '[]');
+      const main = movers.filter((r) => !r.peer && !r.excluded);
+      const run = markets.map((m) => m.run_at).sort().pop();
+      return {
+        screened: markets.reduce((a, m) => a + Number(m.quoted || 0), 0),
+        universe: markets.reduce((a, m) => a + Number(m.universe || 0), 0),
+        tier1: main.filter((r) => tiers(r).includes(1)).length,
+        tier2: main.filter((r) => tiers(r).includes(2)).length,
+        tier3: main.filter((r) => tiers(r).includes(3)).length,
+        excluded: movers.filter((r) => r.excluded).length,
+        peers: movers.filter((r) => r.peer).length,
+        run_at: run || null,
+        as_of: run ? 'As of ' + new Intl.DateTimeFormat('en-AU', { timeZone: 'Australia/Sydney', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(new Date(run)) + ' AEDT' : '',
+      };
+    },
+  });
+
+  const state = { sort: { tier2: ['wk_pct', 'abs'], tier3: ['day_pct', 'abs'], peers: ['day_pct', 'abs'], excluded: ['day_pct', 'abs'] }, selected: {}, showExcluded: false };
+  const marketSel = $('#am-market');
+  marketSel.addEventListener('change', () => dash.setParams({ market: marketSel.value }));
+  $('#am-show-excluded').addEventListener('change', (e) => { state.showExcluded = e.target.checked; draw(); });
+
+  const COLS = [
+    { f: 'symbol', label: 'Name', cell: (r) => { const td = document.createElement('td'); td.className = 'am-namecell'; const b = document.createElement('b'); b.textContent = r.symbol; td.appendChild(b); const s = document.createElement('small'); s.textContent = r.name || ''; td.appendChild(s); return td; } },
+    { f: 'market', label: 'Market', hide: true, cell: (r) => cellText(r.market) },
+    { f: 'price', label: 'Price', hide: true, cell: (r) => cellText(fmt.price(r.price, r.currency)) },
+    { f: 'day_pct', label: 'Today', cell: (r) => cellText(fmt.pct(r.day_pct), cls(r.day_pct)) },
+    { f: 'wk_pct', label: '5 sessions', cell: (r) => cellText(fmt.pct(r.wk_pct), cls(r.wk_pct)) },
+    { f: 'z', label: 'z', cell: (r) => cellText(fmt.z(r.z)) },
+    { f: 'ma200_dev', label: 'vs 200-DMA', hide: true, cell: (r) => cellText(fmt.pct(r.ma200_dev)) },
+    { f: 'mcap_usd', label: 'Mkt cap', cell: (r) => cellText(fmt.cap(r.mcap_usd)) },
+    { f: 'nd_ebitda', label: 'Net debt / EBITDA', cell: (r) => cellText(fmt.ndE(r)) },
+    { f: 'debt_ev', label: 'Debt / EV', hide: true, cell: (r) => cellText(num(r.debt_ev) === null ? '—' : num(r.debt_ev).toFixed(0) + '%') },
+    { f: 'catalyst', label: 'Next catalyst', cell: (r) => cellText(r.catalyst || '—') },
+    { f: 'note', label: 'What happened', note: true, cell: (r) => { const td = cellText(r.note || (r.headlines && r.headlines.length ? r.headlines[0].title : '—')); td.className = 'am-notecell'; return td; } },
+  ];
+  function cellText(text, className) { const td = document.createElement('td'); td.textContent = text; if (className) td.className = className; return td; }
+
+  function sortRows(rows, key) {
+    const [f, mode] = key;
+    const val = (r) => (f === 'symbol' || f === 'market' || f === 'catalyst' || f === 'note') ? String(r[f] || '') : num(r[f]);
+    return rows.slice().sort((a, b) => {
+      let x = val(a), y = val(b);
+      if (typeof x === 'string') return x.localeCompare(y);
+      if (x === null) return 1; if (y === null) return -1;
+      if (mode === 'abs') return Math.abs(y) - Math.abs(x);
+      return mode === 'asc' ? x - y : y - x;
+    });
+  }
+
+  function table(id, rows, status) {
+    const box = $('#am-box-' + id);
+    box.replaceChildren();
+    box.classList.toggle('dash-skeleton', status === 'loading');
+    if (status === 'error') { const d = document.createElement('div'); d.className = 'am-failed'; d.textContent = 'Failed to load'; box.appendChild(d); return; }
+    if (status !== 'ok') return;
+    if (!rows.length) { const d = document.createElement('div'); d.className = 'am-empty'; d.textContent = 'Nothing tripped this screen in the selected markets.'; box.appendChild(d); return; }
+    const t = document.createElement('table');
+    t.setAttribute('data-source', 'movers'); t.setAttribute('data-row-key', 'symbol');
+    const thead = document.createElement('thead'); const tr = document.createElement('tr');
+    COLS.forEach((c) => {
+      const th = document.createElement('th'); th.textContent = c.label; th.setAttribute('data-field', c.f);
+      if (c.hide) th.className = 'am-hide-narrow'; if (c.note) th.className = 'am-notecell';
+      const cur = state.sort[id];
+      if (cur[0] === c.f) th.setAttribute('aria-sort', cur[1] === 'asc' ? 'ascending' : 'descending');
+      th.addEventListener('click', () => { const s = state.sort[id]; state.sort[id] = s[0] === c.f ? [c.f, s[1] === 'abs' ? 'desc' : s[1] === 'desc' ? 'asc' : 'abs'] : [c.f, 'abs']; draw(); });
+      tr.appendChild(th);
+    });
+    thead.appendChild(tr); t.appendChild(thead);
+    const tb = document.createElement('tbody');
+    sortRows(rows, state.sort[id]).forEach((r) => {
+      const row = document.createElement('tr');
+      row.setAttribute('data-key', r.symbol);
+      if (state.selected[id] === r.symbol) row.className = 'is-selected';
+      COLS.forEach((c) => { const td = c.cell(r); if (c.hide) td.classList.add('am-hide-narrow'); row.appendChild(td); });
+      row.addEventListener('click', () => { state.selected[id] = state.selected[id] === r.symbol ? null : r.symbol; draw(); });
+      tb.appendChild(row);
+    });
+    t.appendChild(tb); box.appendChild(t);
+  }
+
+  function detail(id, rows) {
+    const host = $('#am-detail-' + id);
+    host.replaceChildren();
+    const sym = state.selected[id];
+    const r = sym && rows.find((x) => x.symbol === sym);
+    if (!r) return;
+    const w = 'symbol=' + enc(r.symbol);
+    const d = document.createElement('div'); d.className = 'am-detail';
+    const head = document.createElement('div'); head.className = 'am-detail-head';
+    const h = document.createElement('div'); const b = document.createElement('b'); b.textContent = r.symbol + ' · ' + (r.name || ''); h.appendChild(b);
+    const sub = document.createElement('span'); sub.className = 'am-name'; sub.textContent = ' ' + [r.market, r.exchange, r.sector, r.industry].filter(Boolean).join(' · '); h.appendChild(sub);
+    head.appendChild(h);
+    const close = document.createElement('button'); close.textContent = 'Close'; close.addEventListener('click', () => { state.selected[id] = null; draw(); }); head.appendChild(close);
+    d.appendChild(head);
+    if (r.summary) { const p = document.createElement('p'); p.textContent = r.summary + (r.summary.length >= 220 ? '…' : ''); d.appendChild(p); }
+    const g = document.createElement('div'); g.className = 'am-detail-grid';
+    const items = [
+      ['Revenue (TTM)', fmt.money(r.revenue_usd), 'revenue_usd'], ['Market cap', fmt.cap(r.mcap_usd), 'mcap_usd'], ['Enterprise value', fmt.cap(r.ev_usd), 'ev_usd'],
+      ['Total debt', fmt.money(r.debt_usd), 'debt_usd'], ['Cash', fmt.money(r.cash_usd), 'cash_usd'], ['Net debt', fmt.money(r.net_debt_usd), 'net_debt_usd'],
+      ['EBITDA (TTM)', fmt.money(r.ebitda_usd), 'ebitda_usd'], ['Net debt / EBITDA', fmt.ndE(r), 'nd_ebitda'], ['Debt / EV', num(r.debt_ev) === null ? '—' : num(r.debt_ev).toFixed(0) + '%', 'debt_ev'],
+      ['200-session σ (daily)', num(r.sigma200) === null ? '—' : num(r.sigma200).toFixed(2) + '%', 'sigma200'], ['vs 200-DMA', fmt.pct(r.ma200_dev), 'ma200_dev'], ['Last quote', fmt.whenShort(r.quote_time) + (r.market_state ? ' · ' + fmt.state(r.market_state) : ''), 'quote_time'],
+    ];
+    items.forEach(([k, v, f]) => { const row = document.createElement('div'); const a = document.createElement('span'); a.textContent = k; const bb = document.createElement('span'); bb.textContent = v; bb.setAttribute('data-source', 'movers'); bb.setAttribute('data-field', f); bb.setAttribute('data-where', w); row.appendChild(a); row.appendChild(bb); g.appendChild(row); });
+    d.appendChild(g);
+    if (r.excluded) { const p = document.createElement('p'); p.textContent = 'Set aside: ' + r.excluded + '.'; d.appendChild(p); }
+    if (r.headlines && r.headlines.length) {
+      const ul = document.createElement('ul');
+      r.headlines.forEach((hl) => { const li = document.createElement('li'); const a = document.createElement('a'); a.href = hl.url || '#'; a.target = '_blank'; a.rel = 'noopener'; a.textContent = hl.title || ''; li.appendChild(a); if (hl.source) { const s = document.createElement('span'); s.className = 'am-name'; s.textContent = ' · ' + hl.source; li.appendChild(s); } ul.appendChild(li); });
+      d.appendChild(ul);
+    } else { const p = document.createElement('p'); p.className = 'am-name'; p.textContent = 'No headlines found in the last three days.'; d.appendChild(p); }
+    host.appendChild(d);
+  }
+
+  function sparkline(svg, pts) {
+    svg.replaceChildren();
+    if (!pts || pts.length < 2) return;
+    const w = Math.max(120, svg.clientWidth || 240), h = 40, pad = 3;
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+    const x = d3.scaleLinear([0, pts.length - 1], [pad, w - pad]);
+    const ext = d3.extent(pts, (p) => p.close);
+    const y = d3.scaleLinear(ext[0] === ext[1] ? [ext[0] - 1, ext[1] + 1] : ext, [h - pad, pad]);
+    const line = d3.line().x((p, i) => x(i)).y((p) => y(p.close));
+    const up = pts[pts.length - 1].close >= pts[0].close;
+    const color = up ? 'var(--color-ok)' : 'var(--color-bad)';
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', line(pts)); path.setAttribute('fill', 'none'); path.setAttribute('stroke', color); path.setAttribute('stroke-width', '2'); path.setAttribute('stroke-linejoin', 'round'); path.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(path);
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', x(pts.length - 1)); c.setAttribute('cy', y(pts[pts.length - 1].close)); c.setAttribute('r', '4'); c.setAttribute('fill', color); c.setAttribute('stroke', 'var(--color-panel)'); c.setAttribute('stroke-width', '2');
+    svg.appendChild(c);
+  }
+
+  function cards(rows, sparks, status) {
+    const host = $('#am-cards');
+    host.replaceChildren();
+    host.classList.toggle('dash-skeleton', status === 'loading');
+    if (status === 'error') { const d = document.createElement('div'); d.className = 'am-failed'; d.textContent = 'Failed to load'; host.appendChild(d); return; }
+    if (status !== 'ok') return;
+    if (!rows.length) { const d = document.createElement('div'); d.className = 'am-empty'; d.textContent = 'No large cap is moving abnormally in the selected markets right now.'; host.appendChild(d); return; }
+    const bySym = d3.group(sparks, (p) => p.symbol);
+    rows.forEach((r) => {
+      const w = 'symbol=' + enc(r.symbol);
+      const mark = (el, f) => { el.setAttribute('data-source', 'movers'); el.setAttribute('data-field', f); el.setAttribute('data-where', w); return el; };
+      const card = document.createElement('article'); card.className = 'am-card'; card.id = 'card-' + r.symbol.replace(/[^A-Za-z0-9]/g, '-');
+      const top = document.createElement('div'); top.className = 'am-card-top';
+      const idw = document.createElement('div'); const s = document.createElement('div'); s.className = 'am-sym'; s.textContent = r.symbol; idw.appendChild(s);
+      const n = document.createElement('div'); n.className = 'am-name'; n.textContent = r.name || ''; idw.appendChild(n); top.appendChild(idw);
+      const chip = document.createElement('span'); chip.className = 'am-chip'; chip.textContent = r.market + (r.market_state === 'REGULAR' ? ' · open' : ''); top.appendChild(chip);
+      card.appendChild(top);
+      const big = document.createElement('div'); big.className = 'am-big-row';
+      const bv = mark(document.createElement('div'), 'day_pct'); bv.className = 'am-big ' + cls(r.day_pct); bv.textContent = fmt.pct(r.day_pct); big.appendChild(bv);
+      const z = mark(document.createElement('span'), 'z'); z.className = 'am-z'; z.textContent = fmt.z(r.z); big.appendChild(z);
+      card.appendChild(big);
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'am-spark'); svg.setAttribute('preserveAspectRatio', 'none'); card.appendChild(svg);
+      const st = document.createElement('div'); st.className = 'am-stats';
+      [['5 sessions', fmt.pct(r.wk_pct), 'wk_pct'], ['vs 200-DMA', fmt.pct(r.ma200_dev), 'ma200_dev'], ['Mkt cap', fmt.cap(r.mcap_usd), 'mcap_usd'], ['Net debt / EBITDA', fmt.ndE(r), 'nd_ebitda'], ['Price', fmt.price(r.price, r.currency), 'price'], ['Debt / EV', num(r.debt_ev) === null ? '—' : num(r.debt_ev).toFixed(0) + '%', 'debt_ev']]
+        .forEach(([k, v, f]) => { const d = document.createElement('div'); const a = document.createElement('span'); a.textContent = k; const b = mark(document.createElement('span'), f); b.textContent = v; d.appendChild(a); d.appendChild(b); st.appendChild(d); });
+      card.appendChild(st);
+      const cat = mark(document.createElement('div'), 'catalyst'); cat.className = 'am-cat'; cat.textContent = r.catalyst ? 'Next: ' + r.catalyst : 'No scheduled event on file'; card.appendChild(cat);
+      const note = mark(document.createElement('p'), 'note'); note.className = 'am-note'; note.textContent = r.note || (r.headlines && r.headlines[0] ? r.headlines[0].title : 'Note pending.'); card.appendChild(note);
+      host.appendChild(card);
+      requestAnimationFrame(() => sparkline(svg, (bySym.get(r.symbol) || []).map((p) => ({ date: p.date, close: num(p.close) })).filter((p) => p.close !== null)));
+    });
+  }
+
+  function marketsStrip(markets, movers, status) {
+    const host = $('#am-markets');
+    host.replaceChildren();
+    host.classList.toggle('dash-skeleton', status === 'loading');
+    if (status !== 'ok') return;
+    const order = ['S&P 500', 'NASDAQ', 'ASX', 'Nikkei 225', 'KOSPI'];
+    markets.slice().sort((a, b) => order.indexOf(a.market) - order.indexOf(b.market)).forEach((m) => {
+      const w = 'market=' + enc(m.market);
+      const mark = (el, f) => { el.setAttribute('data-source', 'markets'); el.setAttribute('data-field', f); el.setAttribute('data-where', w); return el; };
+      const d = document.createElement('div'); d.className = 'am-mkt';
+      const name = document.createElement('div'); name.className = 'am-mkt-name'; const nm = document.createElement('span'); nm.textContent = m.market; name.appendChild(nm);
+      const stt = mark(document.createElement('span'), 'state'); stt.className = 'am-state' + (m.state === 'REGULAR' ? ' is-open' : ''); stt.textContent = fmt.state(m.state); name.appendChild(stt); d.appendChild(name);
+      const flagged = movers.filter((r) => r.market === m.market && !r.peer && !r.excluded).length;
+      [['Last trade', fmt.whenShort(m.last_trade), 'last_trade'], ['Screened', String(num(m.quoted) ?? '—'), 'quoted'], ['Flagged', String(num(m.flagged) ?? flagged), 'flagged']]
+        .forEach(([k, v, f]) => { const row = document.createElement('div'); row.className = 'am-mkt-row'; const a = document.createElement('span'); a.textContent = k; const b = mark(document.createElement('span'), f); b.textContent = v; row.appendChild(a); row.appendChild(b); d.appendChild(row); });
+      if (m.source && String(m.source).startsWith('FAILED')) { const e = document.createElement('div'); e.className = 'am-mkt-row'; e.textContent = 'Universe failed this run'; e.style.color = 'var(--color-bad)'; d.appendChild(e); }
+      host.appendChild(d);
+    });
+  }
+
+  function draw() {
+    const mv = dash.data('movers'), mk = dash.data('markets'), sp = dash.data('sparks');
+    const market = dash.params().market || 'all';
+    if (marketSel !== document.activeElement) marketSel.value = market;
+    const all = (mv.status === 'ok' ? mv.data : []).map(norm);
+    const inMarket = (r) => market === 'all' || r.market === market;
+    const main = all.filter((r) => inMarket(r) && !r.peer && !r.excluded);
+    const t1 = main.filter((r) => r.tiers.includes(1));
+    const t2 = main.filter((r) => r.tiers.includes(2));
+    const t3 = main.filter((r) => r.tiers.includes(3));
+    const peers = all.filter((r) => r.peer && inMarket(r));
+    const excl = all.filter((r) => r.excluded && inMarket(r));
+    const sparks = sp.status === 'ok' ? sp.data : [];
+    cards(t1, sparks, mv.status === 'ok' && sp.status === 'loading' ? 'ok' : mv.status);
+    table('tier2', t2, mv.status); detail('tier2', t2);
+    table('tier3', t3, mv.status); detail('tier3', t3);
+    table('peers', peers, mv.status); detail('peers', peers);
+    $('#excluded').hidden = !state.showExcluded;
+    if (state.showExcluded) { table('excluded', excl, mv.status); detail('excluded', excl); }
+    $('#am-tier1-count').textContent = mv.status === 'ok' ? t1.length + (t1.length === 1 ? ' name' : ' names') : '';
+    $('#am-tier2-count').textContent = mv.status === 'ok' ? t2.length + (t2.length === 1 ? ' name' : ' names') : '';
+    $('#am-tier3-count').textContent = mv.status === 'ok' ? t3.length + (t3.length === 1 ? ' name' : ' names') : '';
+    $('#am-peers-count').textContent = mv.status === 'ok' ? peers.length + ' names' : '';
+    $('#am-excluded-count').textContent = mv.status === 'ok' ? excl.length + (excl.length === 1 ? ' name' : ' names') : '';
+    marketsStrip(mk.status === 'ok' ? mk.data : [], all, mk.status);
+    const c = dash.data('counts');
+    document.querySelectorAll('#am-takeaway [data-source="counts"]').forEach((el) => {
+      el.classList.remove('dash-skeleton');
+      const f = el.getAttribute('data-field');
+      const v = c.status === 'ok' && c.data ? c.data[f] : null;
+      el.textContent = v === null || v === undefined ? '—' : (typeof v === 'number' ? v.toLocaleString('en') : String(v));
+    });
+  }
+  dash.onData(draw);
+  const named = document.getElementById(location.hash.slice(1));
+  if (named) setTimeout(() => { named.scrollIntoView(); dash.setLink(named.id); }, 300);
+})();
+</script>

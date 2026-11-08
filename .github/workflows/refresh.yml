@@ -1,0 +1,80 @@
+name: Refresh screen
+
+on:
+  schedule:
+    # Hourly at :05, Monday to Friday UTC = Mon 11:05am to Sat 10:05am Sydney while daylight saving applies.
+    # Same cadence as the claude.ai routine this replaced.
+    - cron: "5 * * * 1-5"
+  workflow_dispatch:        # the "Run workflow" button = manual refresh
+  push:
+    branches: [main]
+    paths: [screen.py, notes.py, docs/**, .github/workflows/refresh.yml]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Fetch the data from the last published run (notes cache, and fallback if this run fails)
+        run: |
+          base="${{ steps.pages.outputs.base_url }}"
+          for f in movers markets sparks notes; do
+            if curl -sSL --fail --max-time 60 -o "docs/data/$f.live.json" "$base/data/$f.json?t=$(date +%s)"; then
+              mv "docs/data/$f.live.json" "docs/data/$f.json"
+            else
+              echo "no previous $f.json on the site (first run or private Pages); keeping the repo copy"
+              rm -f "docs/data/$f.live.json"
+            fi
+          done
+
+      - name: Run the screen
+        run: python screen.py run --out docs/data --notes-in docs/data/notes.json
+        continue-on-error: true
+
+      - name: Write one-line notes (skipped when the ANTHROPIC_API_KEY secret is not set)
+        if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          pip install -q anthropic
+          python notes.py --out docs/data
+        continue-on-error: true
+
+      - name: Show the run log
+        run: cat docs/data/log.txt 2>/dev/null || true
+
+      - name: Tidy the publish folder
+        run: rm -f docs/data/needs_notes.json docs/data/new_notes.json
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

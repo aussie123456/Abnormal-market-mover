@@ -1,0 +1,6 @@
+export/
+out/
+docs/data/needs_notes.json
+docs/data/new_notes.json
+docs/data/log.txt
+__pycache__/
