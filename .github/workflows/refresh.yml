@@ -33,6 +33,8 @@ jobs:
       - name: Configure Pages
         id: pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true     # turns Pages on (source = GitHub Actions) if it is not already
 
       - name: Fetch the data from the last published run (notes cache, and fallback if this run fails)
         run: |
@@ -50,8 +52,7 @@ jobs:
         run: python screen.py run --out docs/data --notes-in docs/data/notes.json
         continue-on-error: true
 
-      - name: Write one-line notes (skipped when the ANTHROPIC_API_KEY secret is not set)
-        if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+      - name: Write one-line notes (notes.py skips itself when the ANTHROPIC_API_KEY secret is not set)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
